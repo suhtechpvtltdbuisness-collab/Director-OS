@@ -1,4 +1,11 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5010";
+function normalizeApiUrl(raw) {
+  const value = String(raw || "").trim().replace(/\/+$/, "");
+  if (!value) return "http://localhost:5010";
+  if (/^https?:\/\//i.test(value)) return value;
+  return `https://${value}`;
+}
+
+const API_URL = normalizeApiUrl(import.meta.env.VITE_API_URL || "http://localhost:5010");
 
 const TOKEN_KEY = "director_os_access";
 const REFRESH_KEY = "director_os_refresh";
