@@ -1,50 +1,60 @@
 import React, { useState } from "react";
 import { Plus, CheckSquare, Clock, AlertCircle, LayoutGrid } from "lucide-react";
 import { C } from "../constants/theme";
-import { PRODUCTS, DEVS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { SPRINT_COLUMNS } from "../constants/labels";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
 import Select from "../components/common/Select";
-import IconBtn from "../components/common/IconBtn";
 import PrimaryBtn from "../components/common/PrimaryBtn";
 import SprintColumn from "../components/sprints/SprintColumn";
 import TaskFormModal from "../components/sprints/TaskFormModal";
 
-const emptyForm = { title: "", product: PRODUCTS[0].name, assignee: DEVS[0].name, priority: "Medium", due: "" };
-
-export default function SprintsPage({ tasks, setTasks, pushActivity, toast }) {
+export default function SprintsPage({ tasks, pushActivity, toast, api }) {
+  const { products, devs } = useData();
+  const emptyForm = {
+    title: "",
+    product: products[0]?.name || "",
+    assignee: devs[0]?.name || "",
+    priority: "Medium",
+    due: "",
+  };
   const [showAdd, setShowAdd] = useState(false);
   const [filterDev, setFilterDev] = useState("All");
   const [form, setForm] = useState(emptyForm);
 
-  function addTask() {
+  async function addTask() {
     if (!form.title.trim()) return;
-    const t = {
-      id: "tk" + Date.now(),
-      title: form.title, product: form.product, assignee: form.assignee,
-      priority: form.priority, status: "Backlog", due: form.due || "2026-09-15",
-    };
-    setTasks((ts) => [t, ...ts]);
-    pushActivity("Director", `assigned task '${t.title}' to ${t.assignee}`, "Sprint Board");
-    toast("Task assigned");
-    setShowAdd(false);
-    setForm(emptyForm);
+    try {
+      const item = await api.addTask(form);
+      await pushActivity("Director", `assigned task '${item.title}' to ${item.assignee}`, "Sprint Board");
+      toast("Task assigned");
+      setShowAdd(false);
+      setForm(emptyForm);
+    } catch (err) {
+      toast(err.message || "Failed to assign task", "red");
+    }
   }
 
-  function moveTask(id, status) {
-    setTasks((ts) => ts.map((t) => (t.id === id ? { ...t, status } : t)));
+  async function moveTask(id, status) {
+    try {
+      await api.moveTask(id, status);
+    } catch (err) {
+      toast(err.message || "Failed to move task", "red");
+    }
   }
 
-  function removeTask(id) {
-    setTasks((ts) => ts.filter((t) => t.id !== id));
-    toast("Task removed", "amber");
+  async function removeTask(id) {
+    try {
+      await api.removeTask(id);
+      toast("Task removed", "amber");
+    } catch (err) {
+      toast(err.message || "Failed to remove task", "red");
+    }
   }
 
   const filtered = filterDev === "All" ? tasks : tasks.filter((t) => t.assignee === filterDev);
   const cols = SPRINT_COLUMNS.map((s) => ({ status: s, items: filtered.filter((t) => t.status === s) }));
-
-  const devList = ["All", ...DEVS.map((d) => d.name)];
 
   return (
     <div className="flex flex-col gap-5">
@@ -61,7 +71,7 @@ export default function SprintsPage({ tasks, setTasks, pushActivity, toast }) {
           <>
             <Select value={filterDev} onChange={(e) => setFilterDev(e.target.value)} style={{ width: 170 }}>
               <option value="All">All developers</option>
-              {DEVS.map((d) => <option key={d.id}>{d.name}</option>)}
+              {devs.map((d) => <option key={d.id}>{d.name}</option>)}
             </Select>
             <PrimaryBtn icon={Plus} onClick={() => setShowAdd(true)}>Assign Task</PrimaryBtn>
           </>

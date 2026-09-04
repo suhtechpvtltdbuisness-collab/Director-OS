@@ -1,15 +1,16 @@
 import React from "react";
 import { MapPin, Coffee, CheckCircle, XCircle } from "lucide-react";
 import { C, FONT_DISPLAY } from "../../constants/theme";
-import { DEVS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Panel from "../common/Panel";
 import Badge from "../common/Badge";
 
 export default function AttendancePanel() {
-  const present = DEVS.filter((d) => d.attendance === "Present");
-  const onLeave = DEVS.filter((d) => d.attendance === "Leave");
-  const bengaluru = DEVS.filter((d) => d.location.includes("Bengaluru"));
-  const remote = DEVS.filter((d) => d.location.includes("Remote"));
+  const { devs } = useData();
+  const present = devs.filter((d) => d.attendance === "Present");
+  const onLeave = devs.filter((d) => d.attendance === "Leave");
+  const bengaluru = devs.filter((d) => d.location.includes("Bengaluru"));
+  const remote = devs.filter((d) => d.location.includes("Remote"));
 
   return (
     <Panel className="p-4">
@@ -33,7 +34,7 @@ export default function AttendancePanel() {
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        {DEVS.map((d) => (
+        {devs.map((d) => (
           <div key={d.id} className="flex items-center justify-between text-xs py-1.5" style={{ borderBottom: `1px solid ${C.borderSoft}` }}>
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-semibold"

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Target, TrendingUp, Users, PercentCircle } from "lucide-react";
 import { C } from "../constants/theme";
-import { PRODUCTS, DEVS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { inr } from "../utils/formatCurrency";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -12,42 +12,56 @@ import LeadPipeline from "../components/crm/LeadPipeline";
 import LeadFormModal from "../components/crm/LeadFormModal";
 import LeadDetailModal from "../components/crm/LeadDetailModal";
 
-const emptyForm = { name: "", product: PRODUCTS[0].name, value: "", source: "Website", owner: DEVS[0].name };
-
-export default function CrmPage({ leads, setLeads, pushActivity, toast }) {
+export default function CrmPage({ leads, pushActivity, toast, api }) {
+  const { products, devs } = useData();
+  const emptyForm = {
+    name: "",
+    product: products[0]?.name || "",
+    value: "",
+    source: "Website",
+    owner: devs[0]?.name || "",
+  };
   const [showAdd, setShowAdd] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [q, setQ] = useState("");
   const [form, setForm] = useState(emptyForm);
 
-  function addLead() {
+  async function addLead() {
     if (!form.name.trim()) return;
-    const l = {
-      id: "l" + Date.now(),
-      name: form.name,
-      product: form.product,
-      value: Number(form.value) || 0,
-      source: form.source,
-      stage: "New",
-      owner: form.owner,
-      updated: new Date().toISOString().slice(0, 10),
-    };
-    setLeads((ls) => [l, ...ls]);
-    pushActivity("Director", `added new lead '${l.name}'`, "CRM");
-    toast("Lead added");
-    setShowAdd(false);
-    setForm(emptyForm);
+    try {
+      const item = await api.addLead({
+        name: form.name,
+        product: form.product,
+        value: Number(form.value) || 0,
+        source: form.source,
+        owner: form.owner,
+      });
+      await pushActivity("Director", `added new lead '${item.name}'`, "CRM");
+      toast("Lead added");
+      setShowAdd(false);
+      setForm(emptyForm);
+    } catch (err) {
+      toast(err.message || "Failed to add lead", "red");
+    }
   }
 
-  function moveStage(id, stage) {
-    setLeads((ls) => ls.map((l) => (l.id === id ? { ...l, stage, updated: new Date().toISOString().slice(0, 10) } : l)));
-    toast(`Lead moved to ${stage}`, "blue");
+  async function moveStage(id, stage) {
+    try {
+      await api.moveLead(id, stage);
+      toast(`Lead moved to ${stage}`, "blue");
+    } catch (err) {
+      toast(err.message || "Failed to update lead", "red");
+    }
   }
 
-  function removeLead(id, name) {
-    setLeads((ls) => ls.filter((l) => l.id !== id));
-    pushActivity("Director", `removed lead '${name}'`, "CRM");
-    toast("Lead removed", "amber");
+  async function removeLead(id, name) {
+    try {
+      await api.removeLead(id);
+      await pushActivity("Director", `removed lead '${name}'`, "CRM");
+      toast("Lead removed", "amber");
+    } catch (err) {
+      toast(err.message || "Failed to remove lead", "red");
+    }
   }
 
   const filtered = leads.filter((l) => l.name.toLowerCase().includes(q.toLowerCase()));

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Folder, FileText, Upload } from "lucide-react";
 import { C } from "../constants/theme";
-import { DOCUMENTS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
 import IconBtn from "../components/common/IconBtn";
@@ -10,17 +10,18 @@ import PrimaryBtn from "../components/common/PrimaryBtn";
 import DocumentCard from "../components/documents/DocumentCard";
 
 export default function DocumentsPage() {
+  const { documents } = useData();
   const [folder, setFolder] = useState("All");
   const [q, setQ] = useState("");
 
-  const folders = ["All", ...Array.from(new Set(DOCUMENTS.map((d) => d.folder)))];
-  const filtered = DOCUMENTS
+  const folders = ["All", ...Array.from(new Set(documents.map((d) => d.folder)))];
+  const filtered = documents
     .filter((d) => folder === "All" || d.folder === folder)
     .filter((d) => !q || d.name.toLowerCase().includes(q.toLowerCase()));
 
   const folderCounts = folders.slice(1).map((f) => ({
     name: f,
-    count: DOCUMENTS.filter((d) => d.folder === f).length,
+    count: documents.filter((d) => d.folder === f).length,
   }));
 
   return (
@@ -37,7 +38,7 @@ export default function DocumentsPage() {
       />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard label="Total Documents" value={DOCUMENTS.length} icon={FileText} accent={C.blue} />
+        <KpiCard label="Total Documents" value={documents.length} icon={FileText} accent={C.blue} />
         {folderCounts.slice(0, 3).map((f) => (
           <KpiCard key={f.name} label={f.name} value={f.count} icon={Folder} accent={C.purple} sub="files" />
         ))}

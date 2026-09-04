@@ -1,31 +1,41 @@
 import React, { useState } from "react";
 import { Plus } from "lucide-react";
-import { PRODUCTS, DEVS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import SectionHeader from "../components/common/SectionHeader";
 import PrimaryBtn from "../components/common/PrimaryBtn";
 import ProjectCard from "../components/projects/ProjectCard";
 import ProjectFormModal from "../components/projects/ProjectFormModal";
 
-const emptyForm = { name: "", product: PRODUCTS[0].name, owner: DEVS[0].name, deadline: "" };
-
-export default function ProjectsPage({ projects, setProjects, pushActivity, toast }) {
+export default function ProjectsPage({ projects, pushActivity, toast, api }) {
+  const { products, devs } = useData();
+  const emptyForm = {
+    name: "",
+    product: products[0]?.name || "",
+    owner: devs[0]?.name || "",
+    deadline: "",
+  };
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  function addProject() {
+  async function addProject() {
     if (!form.name.trim()) return;
-    const p = {
-      id: "pr" + Date.now(),
-      name: form.name, product: form.product, owner: form.owner,
-      health: "Green", progress: 0,
-      deadline: form.deadline || "2026-10-01",
-      deployStatus: "Dev", codeStatus: "Not started", risk: "Low",
-    };
-    setProjects((ps) => [p, ...ps]);
-    pushActivity("Director", `created project '${p.name}'`, "Projects");
-    toast("Project created");
-    setShowAdd(false);
-    setForm(emptyForm);
+    try {
+      const item = await api.addProject(form);
+      await pushActivity("Director", `created project '${item.name}'`, "Projects");
+      toast("Project created");
+      setShowAdd(false);
+      setForm(emptyForm);
+    } catch (err) {
+      toast(err.message || "Failed to create project", "red");
+    }
+  }
+
+  async function updateProgress(id, progress) {
+    try {
+      await api.updateProject(id, { progress });
+    } catch (err) {
+      toast(err.message || "Failed to update progress", "red");
+    }
   }
 
   return (
@@ -40,9 +50,7 @@ export default function ProjectsPage({ projects, setProjects, pushActivity, toas
           <ProjectCard
             key={p.id}
             project={p}
-            onUpdateProgress={(id, progress) =>
-              setProjects((ps) => ps.map((x) => (x.id === id ? { ...x, progress } : x)))
-            }
+            onUpdateProgress={updateProgress}
           />
         ))}
       </div>

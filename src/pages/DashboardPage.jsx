@@ -1,7 +1,7 @@
 import React from "react";
 import { DollarSign, Target, AlertTriangle, CheckSquare, Megaphone, LifeBuoy, Code2, TrendingUp } from "lucide-react";
 import { C } from "../constants/theme";
-import { PRODUCTS, DEVS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { inr } from "../utils/formatCurrency";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -13,7 +13,8 @@ import CampaignChart from "../components/dashboard/CampaignChart";
 import PendingApprovalsPreview from "../components/dashboard/PendingApprovalsPreview";
 
 export default function DashboardPage({ projects, leads, campaigns, tickets, approvals, setTab }) {
-  const totalMRR = PRODUCTS.reduce((s, p) => s + p.mrr, 0);
+  const { products, devs } = useData();
+  const totalMRR = products.reduce((s, p) => s + p.mrr, 0);
   const totalPipeline = leads.filter((l) => !["Won", "Lost"].includes(l.stage)).reduce((s, l) => s + l.value, 0);
   const wonThisPeriod = leads.filter((l) => l.stage === "Won").reduce((s, l) => s + l.value, 0);
   const atRiskProjects = projects.filter((p) => p.health === "Red" || p.health === "Amber").length;
@@ -21,7 +22,7 @@ export default function DashboardPage({ projects, leads, campaigns, tickets, app
   const totalConversions = campaigns.reduce((s, c) => s + c.conversions, 0);
   const openTickets = tickets.filter((t) => t.status !== "Resolved").length;
   const pendingApprovals = approvals.filter((a) => a.status === "Pending").length;
-  const avgWorkload = Math.round(DEVS.reduce((s, d) => s + d.workload, 0) / DEVS.length);
+  const avgWorkload = devs.length ? Math.round(devs.reduce((s, d) => s + d.workload, 0) / devs.length) : 0;
 
   return (
     <div className="flex flex-col gap-5">
@@ -38,7 +39,7 @@ export default function DashboardPage({ projects, leads, campaigns, tickets, app
         <KpiCard label="Pending Director Approvals" value={pendingApprovals} icon={CheckSquare} accent={C.amber} sub="awaiting sign-off" />
         <KpiCard label="Marketing Leads Generated" value={totalLeadsGen} delta={`${totalConversions} conversions`} deltaGood icon={Megaphone} accent={C.purple} />
         <KpiCard label="Open Support Tickets" value={openTickets} icon={LifeBuoy} accent={C.blue} sub={`${tickets.filter((t) => t.priority === "Urgent").length} urgent`} />
-        <KpiCard label="Avg. Developer Workload" value={`${avgWorkload}%`} icon={Code2} accent={C.green} sub={`${DEVS.filter((d) => d.status === "Blocked").length} blocked`} />
+        <KpiCard label="Avg. Developer Workload" value={`${avgWorkload}%`} icon={Code2} accent={C.green} sub={`${devs.filter((d) => d.status === "Blocked").length} blocked`} />
         <KpiCard label="Won Deals (Period)" value={inr(wonThisPeriod)} icon={TrendingUp} accent={C.green} />
       </div>
 

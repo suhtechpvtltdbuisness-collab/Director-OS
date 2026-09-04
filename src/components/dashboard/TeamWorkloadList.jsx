@@ -1,11 +1,12 @@
 import React from "react";
 import { ChevronRight } from "lucide-react";
 import { C, FONT_DISPLAY } from "../../constants/theme";
-import { DEVS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Panel from "../common/Panel";
 import ProgressBar from "../common/ProgressBar";
 
 export default function TeamWorkloadList({ onViewAll }) {
+  const { devs } = useData();
   return (
     <Panel className="p-4">
       <div className="flex items-center justify-between mb-3">
@@ -15,7 +16,7 @@ export default function TeamWorkloadList({ onViewAll }) {
         </button>
       </div>
       <div className="flex flex-col gap-3">
-        {DEVS.map((d) => (
+        {devs.map((d) => (
           <div key={d.id} className="flex items-center gap-2">
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold shrink-0"

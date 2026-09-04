@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { PRODUCTS } from "../constants/seedData";
 import { PRODUCT_TYPES } from "../constants/labels";
+import { useData } from "../context/DataContext";
 import SectionHeader from "../components/common/SectionHeader";
 import Input from "../components/common/Input";
 import IconBtn from "../components/common/IconBtn";
@@ -9,10 +9,11 @@ import PortfolioStats from "../components/products/PortfolioStats";
 import PortfolioChart from "../components/products/PortfolioChart";
 
 export default function ProductsPage() {
+  const { products } = useData();
   const [filter, setFilter] = useState("All");
   const [q, setQ] = useState("");
 
-  const filtered = PRODUCTS.filter(
+  const filtered = products.filter(
     (p) => (filter === "All" || p.type === filter) && p.name.toLowerCase().includes(q.toLowerCase())
   );
 

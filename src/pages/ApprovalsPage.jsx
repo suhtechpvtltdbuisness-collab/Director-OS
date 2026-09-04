@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Clock, AlertTriangle, CheckSquare, ShieldCheck, Tag } from "lucide-react";
+import { Clock, AlertTriangle, CheckSquare, ShieldCheck } from "lucide-react";
 import { C } from "../constants/theme";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -8,17 +8,20 @@ import EmptyState from "../components/common/EmptyState";
 import ApprovalCard from "../components/approvals/ApprovalCard";
 import ApprovalConfirmModal from "../components/approvals/ApprovalConfirmModal";
 
-export default function ApprovalsPage({ approvals, setApprovals, isDirector, pushActivity, toast }) {
+export default function ApprovalsPage({ approvals, isDirector, pushActivity, toast, api }) {
   const [active, setActive] = useState(null);
   const [decision, setDecision] = useState(null);
 
-  function decide(id, status) {
-    setApprovals((as) => as.map((a) => (a.id === id ? { ...a, status } : a)));
-    const a = approvals.find((x) => x.id === id);
-    pushActivity("Director", `${status.toLowerCase()} — ${a.title}`, "Approvals");
-    toast(`${status}: ${a.title}`, status === "Approved" ? "green" : "red");
-    setActive(null);
-    setDecision(null);
+  async function decide(id, status) {
+    try {
+      const item = await api.decideApproval(id, status);
+      await pushActivity("Director", `${status.toLowerCase()} — ${item.title}`, "Approvals");
+      toast(`${status}: ${item.title}`, status === "Approved" ? "green" : "red");
+      setActive(null);
+      setDecision(null);
+    } catch (err) {
+      toast(err.message || "Failed to update approval", "red");
+    }
   }
 
   const pending = approvals.filter((a) => a.status === "Pending");

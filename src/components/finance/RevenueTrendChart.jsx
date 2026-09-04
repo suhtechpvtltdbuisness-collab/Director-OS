@@ -2,16 +2,17 @@ import React from "react";
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip } from "recharts";
 import { C, FONT_DISPLAY } from "../../constants/theme";
 import { inrFull } from "../../utils/formatCurrency";
-import { REVENUE_TREND } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Panel from "../common/Panel";
 
 export default function RevenueTrendChart() {
+  const { revenueTrend } = useData();
   return (
     <Panel className="p-4">
       <div className="text-sm font-semibold mb-3" style={{ fontFamily: FONT_DISPLAY }}>Revenue Trend</div>
       <div style={{ width: "100%", height: 200 }}>
         <ResponsiveContainer>
-          <LineChart data={REVENUE_TREND}>
+          <LineChart data={revenueTrend}>
             <CartesianGrid stroke={C.borderSoft} vertical={false} />
             <XAxis dataKey="month" stroke={C.faint} fontSize={11} />
             <YAxis stroke={C.faint} fontSize={11} tickFormatter={(v) => {

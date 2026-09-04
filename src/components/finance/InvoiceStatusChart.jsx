@@ -2,13 +2,14 @@ import React from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RTooltip, Legend } from "recharts";
 import { C, FONT_DISPLAY } from "../../constants/theme";
 import { inrFull } from "../../utils/formatCurrency";
-import { INVOICES } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Panel from "../common/Panel";
 
 export default function InvoiceStatusChart() {
-  const paid = INVOICES.filter((i) => i.status === "Paid").reduce((s, i) => s + i.amount, 0);
-  const pending = INVOICES.filter((i) => i.status === "Pending").reduce((s, i) => s + i.amount, 0);
-  const overdue = INVOICES.filter((i) => i.status === "Overdue").reduce((s, i) => s + i.amount, 0);
+  const { invoices } = useData();
+  const paid = invoices.filter((i) => i.status === "Paid").reduce((s, i) => s + i.amount, 0);
+  const pending = invoices.filter((i) => i.status === "Pending").reduce((s, i) => s + i.amount, 0);
+  const overdue = invoices.filter((i) => i.status === "Overdue").reduce((s, i) => s + i.amount, 0);
 
   const data = [
     { name: "Paid", value: paid, color: C.green },

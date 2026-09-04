@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Wallet, Activity, Users, Target } from "lucide-react";
 import { C } from "../constants/theme";
-import { PRODUCTS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { inr } from "../utils/formatCurrency";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -9,36 +9,39 @@ import PrimaryBtn from "../components/common/PrimaryBtn";
 import CampaignsTable from "../components/marketing/CampaignsTable";
 import CampaignFormModal from "../components/marketing/CampaignFormModal";
 
-const emptyForm = { name: "", product: PRODUCTS[0].name, channel: "", budget: "", status: "Active" };
-
-export default function MarketingPage({ campaigns, setCampaigns, leads, isDirector, pushActivity, toast }) {
+export default function MarketingPage({ campaigns, leads, isDirector, pushActivity, toast, api }) {
+  const { products } = useData();
+  const emptyForm = { name: "", product: products[0]?.name || "", channel: "", budget: "", status: "Active" };
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState(emptyForm);
 
-  function addCampaign() {
+  async function addCampaign() {
     if (!form.name.trim()) return;
-    const c = {
-      id: "cm" + Date.now(),
-      name: form.name,
-      product: form.product,
-      channel: form.channel || "Multi-channel",
-      budget: Number(form.budget) || 0,
-      spend: 0, leads: 0, conversions: 0,
-      status: form.status,
-      start: new Date().toISOString().slice(0, 10),
-      end: "",
-    };
-    setCampaigns((cs) => [c, ...cs]);
-    pushActivity("Director", `created campaign '${c.name}'`, "Marketing");
-    toast("Campaign created");
-    setShowAdd(false);
-    setForm(emptyForm);
+    try {
+      const item = await api.addCampaign({
+        name: form.name,
+        product: form.product,
+        channel: form.channel || "Multi-channel",
+        budget: Number(form.budget) || 0,
+        status: form.status,
+      });
+      await pushActivity("Director", `created campaign '${item.name}'`, "Marketing");
+      toast("Campaign created");
+      setShowAdd(false);
+      setForm(emptyForm);
+    } catch (err) {
+      toast(err.message || "Failed to create campaign", "red");
+    }
   }
 
-  function removeCampaign(id, name) {
-    setCampaigns((cs) => cs.filter((c) => c.id !== id));
-    pushActivity("Director", `archived campaign '${name}'`, "Marketing");
-    toast("Campaign archived", "amber");
+  async function removeCampaign(id, name) {
+    try {
+      await api.removeCampaign(id);
+      await pushActivity("Director", `archived campaign '${name}'`, "Marketing");
+      toast("Campaign archived", "amber");
+    } catch (err) {
+      toast(err.message || "Failed to archive campaign", "red");
+    }
   }
 
   const totalBudget = campaigns.reduce((s, c) => s + c.budget, 0);
@@ -55,9 +58,9 @@ export default function MarketingPage({ campaigns, setCampaigns, leads, isDirect
       />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard label="Total Budget" value={inr(totalBudget)} icon={Wallet} accent={C.gold} />
-        <KpiCard label="Total Spend" value={inr(totalSpend)} icon={Activity} accent={C.blue} sub={`${Math.round((totalSpend / totalBudget) * 100)}% utilized`} />
+        <KpiCard label="Total Spend" value={inr(totalSpend)} icon={Activity} accent={C.blue} sub={`${totalBudget ? Math.round((totalSpend / totalBudget) * 100) : 0}% utilized`} />
         <KpiCard label="Leads Generated" value={totalLeads} icon={Users} accent={C.purple} />
-        <KpiCard label="Conversions" value={totalConv} icon={Target} accent={C.green} sub={`${((totalConv / totalLeads) * 100).toFixed(1)}% rate`} />
+        <KpiCard label="Conversions" value={totalConv} icon={Target} accent={C.green} sub={`${totalLeads ? ((totalConv / totalLeads) * 100).toFixed(1) : 0}% rate`} />
       </div>
 
       <CampaignsTable

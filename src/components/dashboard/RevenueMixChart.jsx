@@ -2,11 +2,12 @@ import React from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip as RTooltip } from "recharts";
 import { C, FONT_DISPLAY, PIE_COLORS } from "../../constants/theme";
 import { inrFull } from "../../utils/formatCurrency";
-import { PRODUCTS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Panel from "../common/Panel";
 
 export default function RevenueMixChart() {
-  const data = PRODUCTS.map((p) => ({ name: p.name, value: p.mrr }));
+  const { products } = useData();
+  const data = products.map((p) => ({ name: p.name, value: p.mrr }));
   return (
     <Panel className="p-4">
       <div className="text-sm font-semibold mb-3" style={{ fontFamily: FONT_DISPLAY }}>

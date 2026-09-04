@@ -1,5 +1,5 @@
 import React from "react";
-import { PRODUCTS, DEVS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import { LEAD_SOURCES } from "../../constants/labels";
 import Modal from "../common/Modal";
 import Field from "../common/Field";
@@ -9,6 +9,7 @@ import PrimaryBtn from "../common/PrimaryBtn";
 import GhostBtn from "../common/GhostBtn";
 
 export default function LeadFormModal({ open, form, setForm, onClose, onSubmit }) {
+  const { products, devs } = useData();
   return (
     <Modal
       open={open}
@@ -27,7 +28,7 @@ export default function LeadFormModal({ open, form, setForm, onClose, onSubmit }
         </Field>
         <Field label="Interested product">
           <Select value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })}>
-            {PRODUCTS.map((p) => <option key={p.id}>{p.name}</option>)}
+            {products.map((p) => <option key={p.id}>{p.name}</option>)}
           </Select>
         </Field>
         <Field label="Estimated value (₹)">
@@ -40,7 +41,7 @@ export default function LeadFormModal({ open, form, setForm, onClose, onSubmit }
         </Field>
         <Field label="Owner">
           <Select value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })}>
-            {DEVS.map((d) => <option key={d.id}>{d.name}</option>)}
+            {devs.map((d) => <option key={d.id}>{d.name}</option>)}
           </Select>
         </Field>
       </div>

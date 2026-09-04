@@ -4,12 +4,13 @@ import {
   Tooltip as RTooltip, Cell,
 } from "recharts";
 import { C, FONT_DISPLAY, PIE_COLORS } from "../../constants/theme";
-import { PRODUCTS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import { inr, inrFull } from "../../utils/formatCurrency";
 import Panel from "../common/Panel";
 
 export default function PortfolioChart() {
-  const data = PRODUCTS.map((p, i) => ({
+  const { products } = useData();
+  const data = products.map((p, i) => ({
     name: p.name.split(" ")[0],
     mrr: p.mrr,
     clients: p.clients,

@@ -1,5 +1,5 @@
 import React from "react";
-import { PRODUCTS } from "../../constants/seedData";
+import { useData } from "../../context/DataContext";
 import Modal from "../common/Modal";
 import Field from "../common/Field";
 import Input from "../common/Input";
@@ -8,6 +8,7 @@ import PrimaryBtn from "../common/PrimaryBtn";
 import GhostBtn from "../common/GhostBtn";
 
 export default function CampaignFormModal({ open, form, setForm, onClose, onSubmit }) {
+  const { products } = useData();
   return (
     <Modal
       open={open}
@@ -30,7 +31,7 @@ export default function CampaignFormModal({ open, form, setForm, onClose, onSubm
         </Field>
         <Field label="Product">
           <Select value={form.product} onChange={(e) => setForm({ ...form, product: e.target.value })}>
-            {PRODUCTS.map((p) => <option key={p.id}>{p.name}</option>)}
+            {products.map((p) => <option key={p.id}>{p.name}</option>)}
           </Select>
         </Field>
         <Field label="Channel">

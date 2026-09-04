@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Users, DollarSign, CheckCircle, Clock } from "lucide-react";
 import { C } from "../constants/theme";
-import { CLIENTS } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { inrFull } from "../utils/formatCurrency";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -12,19 +12,20 @@ import ClientsTable from "../components/clients/ClientsTable";
 const STATUS_FILTERS = ["All", "Active", "Completed", "Trial"];
 
 export default function ClientsPage() {
+  const { clients } = useData();
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
 
-  const filtered = CLIENTS.filter(
+  const filtered = clients.filter(
     (c) =>
       c.name.toLowerCase().includes(q.toLowerCase()) &&
       (statusFilter === "All" || c.status === statusFilter)
   );
 
-  const totalContractValue = CLIENTS.filter((c) => c.status === "Active").reduce((s, c) => s + c.value, 0);
-  const activeCount = CLIENTS.filter((c) => c.status === "Active").length;
-  const trialCount = CLIENTS.filter((c) => c.status === "Trial").length;
-  const completedCount = CLIENTS.filter((c) => c.status === "Completed").length;
+  const totalContractValue = clients.filter((c) => c.status === "Active").reduce((s, c) => s + c.value, 0);
+  const activeCount = clients.filter((c) => c.status === "Active").length;
+  const trialCount = clients.filter((c) => c.status === "Trial").length;
+  const completedCount = clients.filter((c) => c.status === "Completed").length;
 
   return (
     <div className="flex flex-col gap-5">

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
-import { CircleAlert, CircleDot, CircleCheck, AlertTriangle, Plus } from "lucide-react";
+import { CircleAlert, CircleDot, CircleCheck, AlertTriangle } from "lucide-react";
 import { C } from "../constants/theme";
 import { TICKET_FILTERS } from "../constants/labels";
-import { PRODUCTS } from "../constants/seedData";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
 import IconBtn from "../components/common/IconBtn";
@@ -10,15 +9,19 @@ import Select from "../components/common/Select";
 import TicketsTable from "../components/support/TicketsTable";
 import TicketDetailModal from "../components/support/TicketDetailModal";
 
-export default function SupportPage({ tickets, setTickets, pushActivity, toast }) {
+export default function SupportPage({ tickets, pushActivity, toast, api }) {
   const [filter, setFilter] = useState("All");
   const [productFilter, setProductFilter] = useState("All");
   const [selected, setSelected] = useState(null);
 
-  function updateStatus(id, status) {
-    setTickets((ts) => ts.map((t) => (t.id === id ? { ...t, status, updated: new Date().toISOString().slice(0, 10) } : t)));
-    pushActivity("Director", `updated ticket ${id} to ${status}`, "Support");
-    toast("Ticket updated");
+  async function updateStatus(id, status) {
+    try {
+      await api.updateTicket(id, status);
+      await pushActivity("Director", `updated ticket ${id} to ${status}`, "Support");
+      toast("Ticket updated");
+    } catch (err) {
+      toast(err.message || "Failed to update ticket", "red");
+    }
   }
 
   const products = ["All", ...Array.from(new Set(tickets.map((t) => t.product)))];

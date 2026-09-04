@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Wallet, AlertTriangle, CircleCheck, Clock } from "lucide-react";
 import { C } from "../constants/theme";
-import { INVOICES } from "../constants/seedData";
+import { useData } from "../context/DataContext";
 import { inr } from "../utils/formatCurrency";
 import SectionHeader from "../components/common/SectionHeader";
 import KpiCard from "../components/common/KpiCard";
@@ -10,17 +10,23 @@ import InvoicesTable from "../components/finance/InvoicesTable";
 import EscalateModal from "../components/finance/EscalateModal";
 import InvoiceStatusChart from "../components/finance/InvoiceStatusChart";
 
-export default function FinancePage({ isDirector, pushActivity, toast }) {
+export default function FinancePage({ isDirector, pushActivity, toast, api }) {
+  const { invoices } = useData();
   const [gate, setGate] = useState(null);
 
-  const overdue = INVOICES.filter((i) => i.status === "Overdue");
-  const paid = INVOICES.filter((i) => i.status === "Paid").reduce((s, i) => s + i.amount, 0);
-  const totalOutstanding = INVOICES.filter((i) => i.status !== "Paid").reduce((s, i) => s + i.amount, 0);
+  const overdue = invoices.filter((i) => i.status === "Overdue");
+  const paid = invoices.filter((i) => i.status === "Paid").reduce((s, i) => s + i.amount, 0);
+  const totalOutstanding = invoices.filter((i) => i.status !== "Paid").reduce((s, i) => s + i.amount, 0);
 
-  function releasePayment(inv) {
-    pushActivity("Director", `approved payment reminder escalation for ${inv.id}`, "Finance");
-    toast(`Approval recorded for ${inv.id}`, "green");
-    setGate(null);
+  async function releasePayment(inv) {
+    try {
+      await api.escalateInvoice(inv.id);
+      await pushActivity("Director", `approved payment reminder escalation for ${inv.id}`, "Finance");
+      toast(`Approval recorded for ${inv.id}`, "green");
+      setGate(null);
+    } catch (err) {
+      toast(err.message || "Failed to escalate", "red");
+    }
   }
 
   return (
@@ -36,7 +42,7 @@ export default function FinancePage({ isDirector, pushActivity, toast }) {
         <RevenueTrendChart />
         <InvoiceStatusChart />
       </div>
-      <InvoicesTable invoices={INVOICES} isDirector={isDirector} onEscalate={setGate} />
+      <InvoicesTable invoices={invoices} isDirector={isDirector} onEscalate={setGate} />
       <EscalateModal invoice={gate} onClose={() => setGate(null)} onApprove={() => releasePayment(gate)} />
     </div>
   );
