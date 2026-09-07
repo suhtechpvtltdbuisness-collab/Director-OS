@@ -1,37 +1,62 @@
 import {
-  LayoutDashboard,
-  Package,
-  Megaphone,
-  Users,
-  KanbanSquare,
-  FolderKanban,
-  Building2,
-  LifeBuoy,
-  Wallet,
-  CheckSquare,
-  AlertTriangle,
-  History,
-  FileText,
-  Bot,
-  Code2,
+  LayoutDashboard, Package, Megaphone, Users, KanbanSquare, FolderKanban,
+  Building2, LifeBuoy, Wallet, CheckSquare, AlertTriangle, History,
+  FileText, Bot, Code2,
 } from "lucide-react";
 
-export const NAV = [
-  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "products", label: "Products", icon: Package },
-  { id: "marketing", label: "Marketing", icon: Megaphone },
-  { id: "crm", label: "CRM & Leads", icon: Users },
-  { id: "team", label: "Dev Team", icon: Code2 },
-  { id: "sprints", label: "Sprint Board", icon: KanbanSquare },
-  { id: "projects", label: "Projects", icon: FolderKanban },
-  { id: "clients", label: "Clients", icon: Building2 },
-  { id: "support", label: "Support", icon: LifeBuoy },
-  { id: "finance", label: "Finance", icon: Wallet },
-  { id: "approvals", label: "Approvals", icon: CheckSquare },
-  { id: "alerts", label: "Alerts & Risks", icon: AlertTriangle },
-  { id: "activity", label: "Activity Log", icon: History },
-  { id: "documents", label: "Documents", icon: FileText },
-  { id: "assistant", label: "AI Assistant", icon: Bot },
+/**
+ * Sidebar navigation, grouped by business function rather than listed flat.
+ * `directorOnly` areas render a no-permission state for other roles.
+ */
+export const NAV_GROUPS = [
+  {
+    label: "Overview",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
+      { to: "/assistant", label: "AI Assistant", icon: Bot },
+    ],
+  },
+  {
+    label: "Revenue",
+    items: [
+      { to: "/leads", label: "CRM & Leads", icon: Users },
+      { to: "/campaigns", label: "Marketing", icon: Megaphone },
+      { to: "/clients", label: "Clients", icon: Building2 },
+    ],
+  },
+  {
+    label: "Delivery",
+    items: [
+      { to: "/projects", label: "Projects", icon: FolderKanban },
+      { to: "/sprints", label: "Sprint Board", icon: KanbanSquare },
+      { to: "/products", label: "Products", icon: Package },
+      { to: "/team", label: "Dev Team", icon: Code2 },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { to: "/support", label: "Support", icon: LifeBuoy },
+      { to: "/finance", label: "Finance", icon: Wallet, directorOnly: true },
+      { to: "/approvals", label: "Approvals", icon: CheckSquare, badge: "approvals" },
+    ],
+  },
+  {
+    label: "Governance",
+    items: [
+      { to: "/alerts", label: "Alerts & Risks", icon: AlertTriangle },
+      { to: "/activity", label: "Activity Log", icon: History },
+      { to: "/documents", label: "Documents", icon: FileText },
+    ],
+  },
 ];
 
-export const MOBILE_NAV = [NAV[0], NAV[3], NAV[5], NAV[10], NAV[14]];
+export const NAV_ITEMS = NAV_GROUPS.flatMap((g) => g.items);
+
+export const MOBILE_NAV = [
+  { to: "/", label: "Home", icon: LayoutDashboard, end: true },
+  { to: "/leads", label: "Leads", icon: Users },
+  { to: "/projects", label: "Projects", icon: FolderKanban },
+  { to: "/approvals", label: "Approvals", icon: CheckSquare, badge: "approvals" },
+  { to: "/assistant", label: "Assistant", icon: Bot },
+];

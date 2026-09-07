@@ -19,3 +19,20 @@
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
+/* Placeholders must read as hints, never as entered values. */
+input::placeholder,
+textarea::placeholder {
+  color: #5C6784;
+  opacity: 1;
+}
+
+/* Visible keyboard focus on every control. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #D6A24E66;
+  outline-offset: 1px;
+}

@@ -1,32 +1,25 @@
 import React from "react";
-import { X } from "lucide-react";
 import { C } from "../../constants/theme";
-import { LEAD_STAGES } from "../../constants/labels";
-import { inr } from "../../utils/formatCurrency";
-import Panel from "../common/Panel";
-import Badge from "../common/Badge";
+import { inr, formatDate } from "../../utils";
 
-export default function LeadCard({ lead: l, onRemove, onMoveStage, onSelect }) {
+export default function LeadCard({ lead, onOpen, onDragStart }) {
   return (
-    <Panel className="p-3 cursor-pointer hover:ring-1 hover:ring-gold" onClick={() => onSelect?.(l)}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="text-sm font-medium truncate">{l.name}</div>
-        <button onClick={(e) => { e.stopPropagation(); onRemove(l.id, l.name); }} style={{ color: C.faint }}><X size={12} /></button>
+    <article
+      draggable
+      onDragStart={onDragStart}
+      onClick={onOpen}
+      className="rounded-lg p-3 cursor-pointer flex flex-col gap-2 transition-colors"
+      style={{ background: C.panel, border: `1px solid ${C.border}` }}
+      onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.goldBorder)}
+      onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+    >
+      <div className="text-sm font-medium leading-snug" style={{ color: C.text }}>{lead.name}</div>
+      <div className="text-xs" style={{ color: C.faint }}>{lead.product}</div>
+      <div className="flex items-center justify-between gap-2 pt-1">
+        <span className="text-sm font-semibold tabular-nums" style={{ color: C.gold }}>{inr(lead.value)}</span>
+        <span className="text-[10px]" style={{ color: C.faint }}>{formatDate(lead.updated)}</span>
       </div>
-      <div className="text-xs mt-1" style={{ color: C.muted }}>{l.product}</div>
-      <div className="text-xs font-semibold mt-1" style={{ color: C.gold }}>{inr(l.value)}</div>
-      <div className="flex items-center justify-between mt-2">
-        <Badge text={l.source} tone="gray" />
-        <span className="text-[10px]" style={{ color: C.faint }}>{l.owner.split(" ")[0]}</span>
-      </div>
-      <select
-        value={l.stage}
-        onChange={(e) => onMoveStage(l.id, e.target.value)}
-        className="w-full mt-2 rounded px-2 py-1 text-xs"
-        style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.text }}
-      >
-        {LEAD_STAGES.map((s) => <option key={s}>{s}</option>)}
-      </select>
-    </Panel>
+      <div className="text-[11px] truncate" style={{ color: C.muted }}>{lead.owner}</div>
+    </article>
   );
 }

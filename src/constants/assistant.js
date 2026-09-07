@@ -1,11 +1,11 @@
 export const ASSISTANT_INTRO =
-  "I'm your executive assistant. I read live data across products, marketing, dev team, finance and approvals. Ask me about company status, or use a quick prompt below.";
+  "I read across products, pipeline, delivery, support and finance. Ask a question, or start with one of these.";
 
 export const QUICK_PROMPTS = [
-  { label: "Today's company summary", tab: null },
-  { label: "What needs my approval?", tab: "approvals" },
-  { label: "Which projects are at risk?", tab: "projects" },
-  { label: "Marketing performance this month", tab: "marketing" },
-  { label: "Who on the dev team is blocked?", tab: "team" },
-  { label: "Overdue invoices", tab: "finance" },
+  { label: "Company summary", intent: "summary" },
+  { label: "What needs my approval?", intent: "approvals", to: "/approvals" },
+  { label: "Which projects are at risk?", intent: "risk", to: "/projects" },
+  { label: "Marketing performance", intent: "marketing", to: "/campaigns" },
+  { label: "Who is blocked?", intent: "blocked", to: "/team" },
+  { label: "Overdue invoices", intent: "overdue", to: "/finance/invoices" },
 ];
