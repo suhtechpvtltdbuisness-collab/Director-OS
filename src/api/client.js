@@ -19,6 +19,10 @@ export function getAccessToken() {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+export function getRefreshToken() {
+  return localStorage.getItem(REFRESH_KEY);
+}
+
 export function getStoredUser() {
   try {
     const raw = localStorage.getItem(USER_KEY);
@@ -48,23 +52,55 @@ export class ApiError extends Error {
   }
 }
 
+async function parseResponse(res) {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function refreshAccessToken() {
+  const refresh = getRefreshToken();
+  if (!refresh) return null;
+  const res = await fetch(`${API_URL}/api/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refreshToken: refresh }),
+  });
+  const data = await parseResponse(res);
+  if (!res.ok) {
+    clearSession();
+    return null;
+  }
+  setSession(data);
+  return data.accessToken;
+}
+
 export async function api(path, { method = "GET", body, token, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
   const access = token ?? (auth ? getAccessToken() : null);
   if (access) headers.Authorization = `Bearer ${access}`;
 
-  const res = await fetch(`${API_URL}${path}`, {
+  let res = await fetch(`${API_URL}${path}`, {
     method,
     headers,
     body: body != null ? JSON.stringify(body) : undefined,
   });
 
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    data = null;
+  if (res.status === 401 && auth && !token) {
+    const newToken = await refreshAccessToken();
+    if (newToken) {
+      headers.Authorization = `Bearer ${newToken}`;
+      res = await fetch(`${API_URL}${path}`, {
+        method,
+        headers,
+        body: body != null ? JSON.stringify(body) : undefined,
+      });
+    }
   }
+
+  const data = await parseResponse(res);
 
   if (!res.ok) {
     throw new ApiError(data?.message || `Request failed (${res.status})`, res.status);

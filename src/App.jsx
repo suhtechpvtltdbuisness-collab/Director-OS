@@ -3,7 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import { DataStoreProvider, useStore } from "./data/DataStore";
 import { SessionProvider } from "./context/SessionContext";
 import { getStoredUser, getAccessToken, clearSession } from "./api/client";
-import { logout as apiLogout } from "./api";
+import { logout as apiLogout, fetchMe } from "./api";
 import { riskTone } from "./utils";
 import AppShell from "./components/layout/AppShell";
 import { ForbiddenView, NotFoundView } from "./components/ui";
@@ -171,6 +171,18 @@ function AuthenticatedApp({ user, isDirector, toasts, toast, onSignOut }) {
 export default function App() {
   const [user, setUser] = useState(() => getStoredUser());
   const [toasts, setToasts] = useState([]);
+  const [booting, setBooting] = useState(() => Boolean(getStoredUser() && getAccessToken()));
+
+  React.useEffect(() => {
+    if (!getAccessToken()) {
+      setBooting(false);
+      return;
+    }
+    fetchMe()
+      .then(({ user: me }) => { if (me) setUser(me); })
+      .catch(() => { clearSession(); setUser(null); })
+      .finally(() => setBooting(false));
+  }, []);
 
   const toast = useCallback((msg, tone = "green") => {
     const id = Date.now() + Math.random();
@@ -185,6 +197,13 @@ export default function App() {
   }
 
   if (!user) return <LoginPage onLogin={setUser} />;
+  if (booting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0a0a0b", color: "#888" }}>
+        Loading…
+      </div>
+    );
+  }
 
   return (
     <DataStoreProvider>

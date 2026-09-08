@@ -20,6 +20,16 @@ export async function verifyOtp({ otpToken, otp }) {
   return data;
 }
 
+export async function refreshSession(refreshToken) {
+  const data = await api("/api/auth/refresh", {
+    method: "POST",
+    auth: false,
+    body: { refreshToken },
+  });
+  setSession(data);
+  return data;
+}
+
 export async function fetchMe() {
   return api("/api/auth/me");
 }
@@ -37,38 +47,39 @@ export async function fetchBootstrap() {
   return api("/api/bootstrap");
 }
 
-export const leadsApi = {
-  create: (body) => api("/api/leads", { method: "POST", body }),
-  update: (id, body) => api(`/api/leads/${id}`, { method: "PATCH", body }),
-  remove: (id) => api(`/api/leads/${id}`, { method: "DELETE" }),
-};
+export async function searchAll(q) {
+  return api(`/api/search?q=${encodeURIComponent(q)}`);
+}
 
-export const campaignsApi = {
-  create: (body) => api("/api/campaigns", { method: "POST", body }),
-  remove: (id) => api(`/api/campaigns/${id}`, { method: "DELETE" }),
-};
+const crud = (base) => ({
+  create: (body) => api(base, { method: "POST", body }),
+  update: (id, body) => api(`${base}/${id}`, { method: "PATCH", body }),
+  remove: (id) => api(`${base}/${id}`, { method: "DELETE" }),
+});
 
-export const projectsApi = {
-  create: (body) => api("/api/projects", { method: "POST", body }),
-  update: (id, body) => api(`/api/projects/${id}`, { method: "PATCH", body }),
+export const leadsApi = crud("/api/leads");
+export const campaignsApi = crud("/api/campaigns");
+export const projectsApi = crud("/api/projects");
+export const tasksApi = crud("/api/tasks");
+export const productsApi = crud("/api/products");
+export const devsApi = crud("/api/devs");
+export const clientsApi = crud("/api/clients");
+export const documentsApi = crud("/api/documents");
+export const invoicesApi = {
+  ...crud("/api/invoices"),
+  escalate: (id) => api(`/api/invoices/${id}/escalate`, { method: "POST" }),
 };
-
-export const tasksApi = {
-  create: (body) => api("/api/tasks", { method: "POST", body }),
-  update: (id, body) => api(`/api/tasks/${id}`, { method: "PATCH", body }),
-  remove: (id) => api(`/api/tasks/${id}`, { method: "DELETE" }),
+export const expensesApi = {
+  create: (body) => api("/api/finance/expenses", { method: "POST", body }),
+  remove: (id) => api(`/api/finance/expenses/${id}`, { method: "DELETE" }),
 };
-
-export const ticketsApi = {
-  update: (id, body) => api(`/api/tickets/${id}`, { method: "PATCH", body }),
+export const ticketsApi = crud("/api/tickets");
+export const ticketCommentsApi = {
+  create: (body) => api("/api/ticket-comments", { method: "POST", body }),
 };
 
 export const approvalsApi = {
   decide: (id, status) => api(`/api/approvals/${id}`, { method: "PATCH", body: { status } }),
-};
-
-export const invoicesApi = {
-  escalate: (id) => api(`/api/invoices/${id}/escalate`, { method: "POST" }),
 };
 
 export const alertsApi = {

@@ -1,41 +1,114 @@
 import * as mockDb from "../mock/db";
 import { fetchBootstrap } from "../api";
-import * as apiClient from "../api";
+import {
+  leadsApi,
+  campaignsApi,
+  projectsApi,
+  tasksApi,
+  ticketsApi,
+  productsApi,
+  devsApi,
+  clientsApi,
+  documentsApi,
+  invoicesApi,
+  expensesApi,
+  ticketCommentsApi,
+  approvalsApi,
+  alertsApi,
+} from "../api";
 
 /**
  * The single seam between the UI and its data.
- *
- * `VITE_DATA_SOURCE=api` switches the whole application onto the live backend.
- * It defaults to "mock" because the backend database is currently empty, which
- * would leave every screen blank. No component imports the mock data directly.
+ * Set VITE_DATA_SOURCE=api to use the live backend (default).
  */
-export const SOURCE = import.meta.env.VITE_DATA_SOURCE === "api" ? "api" : "mock";
+export const SOURCE = import.meta.env.VITE_DATA_SOURCE === "mock" ? "mock" : "api";
 
-/** Live-backend write endpoints that exist today. Others are not yet built. */
 const API_WRITERS = {
-  leads: apiClient.leadsApi,
-  campaigns: apiClient.campaignsApi,
-  projects: apiClient.projectsApi,
-  tasks: apiClient.tasksApi,
-  tickets: apiClient.ticketsApi,
+  leads: leadsApi,
+  campaigns: campaignsApi,
+  projects: projectsApi,
+  tasks: tasksApi,
+  tickets: ticketsApi,
+  products: productsApi,
+  devs: devsApi,
+  clients: clientsApi,
+  documents: documentsApi,
+  invoices: invoicesApi,
+  expenses: expensesApi,
+  ticketComments: ticketCommentsApi,
 };
 
-function writer(collection, op) {
-  const fns = API_WRITERS[collection];
-  if (!fns?.[op]) {
-    throw new Error(`The backend has no ${op} endpoint for "${collection}" yet.`);
+function normalizeRecord(collection, record) {
+  if (!record) return record;
+  if (collection === "products") {
+    return { ...record, clientCount: record.clientCount ?? record.clients ?? 0 };
   }
-  return fns[op];
+  if (collection === "clients") {
+    return { ...record, contactName: record.contactName ?? record.contact ?? "" };
+  }
+  return record;
+}
+
+async function apiCreate(collection, body) {
+  const fns = API_WRITERS[collection];
+  if (!fns?.create) throw new Error(`The backend has no create endpoint for "${collection}".`);
+  const res = await fns.create(body);
+  return normalizeRecord(collection, res.item);
+}
+
+async function apiUpdate(collection, id, patch) {
+  if (collection === "approvals" && patch.status) {
+    return normalizeRecord(collection, (await approvalsApi.decide(id, patch.status)).item);
+  }
+  if (collection === "alerts" && patch.dismissed === true) {
+    return normalizeRecord(collection, (await alertsApi.dismiss(id)).item);
+  }
+  const fns = API_WRITERS[collection];
+  if (!fns?.update) throw new Error(`The backend has no update endpoint for "${collection}".`);
+  return normalizeRecord(collection, (await fns.update(id, patch)).item);
+}
+
+async function apiRemove(collection, id) {
+  const fns = API_WRITERS[collection];
+  if (!fns?.remove) throw new Error(`The backend has no delete endpoint for "${collection}".`);
+  await fns.remove(id);
+  return { id };
 }
 
 const apiSource = {
   async listAll() {
     const boot = await fetchBootstrap();
-    return { ...boot, devs: boot.devs || [], milestones: [], ticketComments: [], expenses: [] };
+    const products = (boot.products || []).map((p) => ({
+      ...p,
+      clientCount: p.clientCount ?? p.clients ?? 0,
+    }));
+    const clients = (boot.clients || []).map((c) => ({
+      ...c,
+      contactName: c.contactName ?? c.contact ?? "",
+    }));
+    return {
+      products,
+      devs: boot.devs || [],
+      clients,
+      projects: boot.projects || [],
+      milestones: boot.milestones || [],
+      leads: boot.leads || [],
+      campaigns: boot.campaigns || [],
+      tickets: boot.tickets || [],
+      ticketComments: boot.ticketComments || [],
+      invoices: boot.invoices || [],
+      expenses: boot.expenses || [],
+      approvals: boot.approvals || [],
+      alerts: boot.alerts || [],
+      activity: boot.activity || [],
+      documents: boot.documents || [],
+      tasks: boot.tasks || [],
+      revenueTrend: boot.revenueTrend || [],
+    };
   },
-  create: (c, body) => writer(c, "create")(body).then((r) => r.item),
-  update: (c, id, patch) => writer(c, "update")(id, patch).then((r) => r.item),
-  remove: (c, id) => writer(c, "remove")(id),
+  create: apiCreate,
+  update: apiUpdate,
+  remove: apiRemove,
 };
 
 export const source = SOURCE === "api" ? apiSource : mockDb;

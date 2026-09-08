@@ -4,6 +4,8 @@ import { Bot, Send, User } from "lucide-react";
 import { C, FONT_DISPLAY } from "../../constants/theme";
 import { ASSISTANT_INTRO, QUICK_PROMPTS } from "../../constants/assistant";
 import { useStore } from "../../data/DataStore";
+import { SOURCE } from "../../data/source";
+import { assistantApi } from "../../api";
 import { inr, dueLabel, daysUntil } from "../../utils";
 import { PageHeader, Card, ErrorView, Skeleton } from "../../components/ui";
 import PrimaryBtn from "../../components/common/PrimaryBtn";
@@ -145,6 +147,7 @@ export default function AssistantPage() {
   const { data, status, error, reload } = useStore();
   const [messages, setMessages] = React.useState([]);
   const [input, setInput] = React.useState("");
+  const [asking, setAsking] = React.useState(false);
   const endRef = React.useRef(null);
 
   React.useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -154,14 +157,23 @@ export default function AssistantPage() {
   }
   if (status === "error") return <ErrorView error={error} onRetry={reload} />;
 
-  function ask(question) {
-    if (!question.trim()) return;
-    setMessages((m) => [
-      ...m,
-      { role: "user", content: { text: question } },
-      { role: "bot", content: answer(question, data) },
-    ]);
+  async function ask(question) {
+    if (!question.trim() || asking) return;
+    setMessages((m) => [...m, { role: "user", content: { text: question } }]);
     setInput("");
+    setAsking(true);
+    try {
+      if (SOURCE === "api") {
+        const { reply } = await assistantApi.chat(question);
+        setMessages((m) => [...m, { role: "bot", content: { text: reply } }]);
+      } else {
+        setMessages((m) => [...m, { role: "bot", content: answer(question, data) }]);
+      }
+    } catch (err) {
+      setMessages((m) => [...m, { role: "bot", content: { text: err.message || "Could not reach the assistant." } }]);
+    } finally {
+      setAsking(false);
+    }
   }
 
   return (
@@ -209,7 +221,7 @@ export default function AssistantPage() {
             className="flex-1 rounded-md px-3 py-2 text-sm outline-none"
             style={{ background: C.bg, border: `1px solid ${C.border}`, color: C.text }}
           />
-          <PrimaryBtn icon={Send} onClick={() => ask(input)} disabled={!input.trim()}>Ask</PrimaryBtn>
+          <PrimaryBtn icon={Send} onClick={() => ask(input)} disabled={!input.trim() || asking}>Ask</PrimaryBtn>
         </div>
       </Card>
     </>
